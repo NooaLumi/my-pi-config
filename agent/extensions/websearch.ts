@@ -32,7 +32,7 @@ export default function (pi: ExtensionAPI) {
    pi.registerTool({
       name: "websearch",
       label: "Web Search",
-      description: "Search the internet using a Mistral AI web search agent",
+      description: "Find up-to-date information on the internet",
       parameters: Type.Object({
          query: Type.String({
             description: "The search query or question to look up on the internet",
