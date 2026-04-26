@@ -1,0 +1,7 @@
+{
+  "lastChangelogVersion": "0.70.2",
+  "defaultProvider": "mistral",
+  "defaultModel": "devstral-medium-latest",
+  "hideThinkingBlock": false,
+  "quietStartup": true
+}

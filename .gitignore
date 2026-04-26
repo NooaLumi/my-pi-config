@@ -1,0 +1,5 @@
+.*
+!.gitignore
+node_modules/
+agent/sessions/
+agent/auth.json
