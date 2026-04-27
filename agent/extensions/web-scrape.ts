@@ -28,16 +28,15 @@ async function executeScrape(url: string, ctx: any) {
 
    if (!response.ok) {
       let errorMessage = `Zyte API request failed with status ${response.status}`;
-      
+
       try {
-        // should have a json response with 'title' https://docs.zyte.com/zyte-api/usage/reference.html
+         // should have a json response with 'title' https://docs.zyte.com/zyte-api/usage/reference.html
          const errorData: any = await response.json();
          if (!errorData.title) throw new Error();
 
          errorMessage = errorData.title;
-      } catch (_e) {
-      }
-      
+      } catch (_e) {}
+
       throw new Error(errorMessage);
    }
 
