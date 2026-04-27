@@ -6,5 +6,10 @@ The contents of my `~/.pi` directory used by the [Pi coding agent](https://githu
 
 ## Contents
 
-- This repo contains everything in my `~/.pi` directory with the omission of `~/.pi/agent/auth.json` and `~/.pi/agent/sessions` for obvious reasons. Might also leave out some WIP stuff.
-- There's really only one thing worth your notice: If you use mistral, you might find `./agent/extensions/websearch.ts` interesting. It calls the mistral agent API (beta) with access to the `web_search` tool. So if you use devstral and have a mistral API key, you get a web search subagent too without having to setup something separately. Not sure what mistral uses under the hood, but all the big players in the web API space are American like Exa, Tavily and Firecrawl. Zyte has web scraping, but afaik doesn't come with search. 
+This repo contains everything in my `~/.pi` directory with the omission of `~/.pi/agent/auth.json` and `~/.pi/agent/sessions` for obvious reasons. Might also leave out some WIP stuff.
+
+### Interesting(?) stuff
+
+- `./agent/extensions/_unused-websearch.ts` contains my first try at a web search tool. It uses the Mistral API to call an agent with web search capabilities. Cheap, but also kind of terrible, since you can't force it to actually commit to a search, and it sometimes provides dead links and inaccurate summaries. Works but barely. 
+- `./agent/extensions/google-search.ts` and `web-scrape.ts` use **Zyte** to first fetch Google results, then scrape the result contents. Works really well so far and doesn't cost _that_ much. I'm using Zyte over more popular alternatives for the same reason I use Mistral: fuck the eagle. 
+
