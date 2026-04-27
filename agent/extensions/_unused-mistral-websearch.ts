@@ -63,7 +63,7 @@ export default function (pi: ExtensionAPI) {
 
             const response = await client.beta.conversations.start({
                inputs: `${params.query}. Format response as pure markdown`,
-               model: "mistral-small-latest",
+               model: "mistral-medium-latest",
                instructions: INSTRUCTIONS,
                completionArgs: COMPLETION_ARGS,
                tools: TOOLS,

@@ -13,10 +13,10 @@
    "author": "Nooa Lumilaakso",
    "pi": {
       "extensions": [
-         "ollama-summarizer.ts",
          "ask-me-first.ts",
          "startup-header.ts",
-         "websearch.ts"
+         "google-search.ts",
+         "web-scrape.ts"
       ]
    },
    "peerDependencies": {
