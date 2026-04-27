@@ -27,13 +27,24 @@ async function executeScrape(url: string, ctx: any) {
    });
 
    if (!response.ok) {
-      throw new Error(`Zyte API request failed with status ${response.status}`);
+      let errorMessage = `Zyte API request failed with status ${response.status}`;
+      
+      try {
+        // should have a json response with 'title' https://docs.zyte.com/zyte-api/usage/reference.html
+         const errorData: any = await response.json();
+         if (!errorData.title) throw new Error();
+
+         errorMessage = errorData.title;
+      } catch (_e) {
+      }
+      
+      throw new Error(errorMessage);
    }
 
    const responseData: any = await response.json();
 
    if (!responseData.pageContent || !responseData.pageContent.itemMain) {
-      return "Page not found or content couldn't be parsed.";
+      throw new Error("Page not found or content couldn't be parsed.");
    }
 
    const markdown =

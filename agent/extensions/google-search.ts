@@ -28,13 +28,24 @@ async function executeGoogleSearch(query: string, ctx: any) {
    });
 
    if (!response.ok) {
-      throw new Error(`Zyte API request failed with status ${response.status}`);
+      let errorMessage = `Zyte API request failed with status ${response.status}`;
+      
+      try {
+        // should have a json response with 'title' https://docs.zyte.com/zyte-api/usage/reference.html
+         const errorData: any = await response.json();
+         if (!errorData.title) throw new Error();
+
+            errorMessage = errorData.title;
+      } catch (_e) {
+      }
+      
+      throw new Error(errorMessage);
    }
 
    const responseData: any = await response.json();
 
    if (!responseData.serp || !responseData.serp.organicResults || responseData.serp.organicResults.length === 0) {
-      return "No search results found.";
+      throw new Error("No search results found.");
    }
 
    const sortedResults = [...responseData.serp.organicResults].sort((a, b) => a.rank - b.rank);
@@ -49,7 +60,6 @@ async function executeGoogleSearch(query: string, ctx: any) {
 }
 
 export default function (pi: ExtensionAPI) {
-   // Register the tool
    pi.registerTool({
       name: "google-search",
       label: "Google web search",
