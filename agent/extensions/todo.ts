@@ -53,7 +53,7 @@ function listTodos(ctx: ExtensionCommandContext): string {
       .map((line, index) => `${String(index + 1).padStart(2)}: ${line}`)
       .join("\n");
 
-   return `${ctx.ui.theme.fg("dim", "----------------------------------------------------- todo list (15 newest)")}\n${ctx.ui.theme.fg("muted", displayLines)}`;
+   return `${ctx.ui.theme.fg("dim", "---------------------------------------------------- todo list (15 newest)")}\n${ctx.ui.theme.fg("muted", displayLines)}`;
 }
 
 function addTodo(item: string, ctx: ExtensionCommandContext): void {
