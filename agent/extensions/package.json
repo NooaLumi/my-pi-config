@@ -16,7 +16,8 @@
          "./guard/guard.ts",
          "startup-header.ts",
          "google-search.ts",
-         "web-scrape.ts"
+         "web-scrape.ts",
+         "todo.ts"
       ]
    },
    "peerDependencies": {
