@@ -62,10 +62,18 @@ export default function (pi: ExtensionAPI) {
                ];
 
                const getOnboardingLines = (): string[] => {
-                  const lines = asciiArtRows.map((row) => theme.fg("mdHeading", row));
-                  lines[0] += theme.fg("accent", `Try again`);
-                  lines[1] += theme.fg("accent", ` rustbucket...`);
-                  lines[2] += theme.fg("success", `  v${VERSION}`);
+                  // todo cleanup
+                  const lines = asciiArtRows.map((row, i) => theme.fg(i > 5 ? "customMessageLabel" : "border", row));
+                  lines[0] += theme.fg("border", `Try again`);
+                  lines[1] += theme.fg("border", ` toaster...`);
+                  lines[2] += theme.fg("customMessageLabel", `  v${VERSION}`);
+                  lines[3] += theme.fg("customMessageLabel", ` o`);
+                  lines[4] += theme.fg("customMessageLabel", `o`);
+                  lines[5] += theme.fg("customMessageLabel", `o`);
+                  lines[6] += theme.fg("border", ` o`);
+                  lines[7] += theme.fg("border", `  o`);
+
+                  lines.push(" ".repeat(63) + theme.fg("border", "o"));
                   return lines;
                };
 
@@ -108,7 +116,7 @@ export default function (pi: ExtensionAPI) {
 
                const contextInfo = resourceLines.length > 0 ? resourceLines : [theme.fg("dim", "No context? :(")];
 
-               return [...getOnboardingLines(), "", ...contextInfo];
+               return [...getOnboardingLines(), ...contextInfo];
             },
             invalidate() {},
          };
