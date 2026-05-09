@@ -3,59 +3,103 @@ import { getMarkdownTheme } from "@mariozechner/pi-coding-agent";
 import { Markdown } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
 
-const USE_NERD_FONT = true; // * NOTE: toggle this off if your font doesn't support Nerd Font icons
+const USE_NERD_FONT = true;
+const SEARCH_TIMEOUT_MS = 30000;
 
-async function executeGoogleSearch(query: string, ctx: any) {
-   // ~/.pi/agent/auth.json
+function getEllipsis(frame: number): string {
+   const frames = [".", "..", "..."];
+   return frames[frame % frames.length];
+}
+
+function getIcon(): string {
+   return USE_NERD_FONT ? "\udb81\udf0f " : "";
+}
+
+async function executeGoogleSearch(query: string, ctx: any): Promise<string> {
+   const sanitizedQuery = query.trim();
+   if (!sanitizedQuery) {
+      throw new Error("Search query cannot be empty");
+   }
+
    const zyteKey = await ctx.modelRegistry.authStorage.getApiKey("zyte");
 
    if (!zyteKey) {
-      throw new Error("Zyte API key not found in auth storage");
+      throw new Error('Zyte API key not found. Add it to ~/.pi/agent/auth.json with key: "zyte"');
    }
 
-   const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-   const response = await fetch("https://api.zyte.com/v1/extract", {
-      method: "POST",
-      headers: {
-         "Content-Type": "application/json",
-         Authorization: `Basic ${Buffer.from(`${zyteKey}:`).toString("base64")}`,
-      },
-      body: JSON.stringify({
-         url: searchUrl,
-         serp: true,
-         serpOptions: { extractFrom: "httpResponseBody" },
-      }),
-   });
+   const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(sanitizedQuery)}`;
 
-   if (!response.ok) {
-      let errorMessage = `Zyte API request failed with status ${response.status}`;
+   const controller = new AbortController();
+   const timeoutId = setTimeout(() => controller.abort(), SEARCH_TIMEOUT_MS);
 
-      try {
-         // should have a json response with 'title' https://docs.zyte.com/zyte-api/usage/reference.html
-         const errorData: any = await response.json();
-         if (!errorData.title) throw new Error();
+   try {
+      const response = await fetch("https://api.zyte.com/v1/extract", {
+         method: "POST",
+         headers: {
+            "Content-Type": "application/json",
+            Authorization: `Basic ${Buffer.from(`${zyteKey}:`).toString("base64")}`,
+         },
+         body: JSON.stringify({
+            url: searchUrl,
+            serp: true,
+            serpOptions: { extractFrom: "httpResponseBody" },
+         }),
+         signal: controller.signal,
+      });
 
-         errorMessage = errorData.title;
-      } catch (_e) {}
+      clearTimeout(timeoutId);
 
-      throw new Error(errorMessage);
+      if (!response.ok) {
+         let errorMessage = `Zyte API request failed with status ${response.status}`;
+         try {
+            const errorData = await response.json();
+            if (errorData && typeof errorData === "object") {
+               errorMessage = (errorData as { title?: string }).title || errorMessage;
+            }
+         } catch {}
+         throw new Error(errorMessage);
+      }
+
+      const responseData: unknown = await response.json();
+
+      if (!responseData || typeof responseData !== "object") {
+         throw new Error("Invalid response format from Zyte API");
+      }
+
+      const serp = (responseData as { serp?: unknown }).serp;
+      if (!serp || typeof serp !== "object") {
+         throw new Error("No SERP data in response");
+      }
+
+      const organicResults = (serp as { organicResults?: unknown }).organicResults;
+      if (!Array.isArray(organicResults) || organicResults.length === 0) {
+         throw new Error("No search results found.");
+      }
+
+      const results = organicResults as Array<{ name: string; url: string; description?: string; rank: number }>;
+      const sortedResults = [...results].sort((a, b) => a.rank - b.rank);
+
+      const icon = getIcon();
+      let markdown = `${icon}# Search Results for "${sanitizedQuery}"`;
+      markdown += `\n\n*Found ${sortedResults.length} result${sortedResults.length !== 1 ? "s" : ""}*\n\n`;
+
+      for (const result of sortedResults) {
+         const displayUrl = result.url.replace(/^https?:\/\//, "");
+         markdown += `### [${result.name}](${result.url})\n`;
+         markdown += `${displayUrl}\n\n`;
+         markdown += `${result.description || "No description available."}\n\n`;
+         markdown += "---\n\n";
+      }
+
+      return markdown;
+   } catch (error) {
+      clearTimeout(timeoutId);
+
+      if (error instanceof Error && error.name === "AbortError") {
+         throw new Error(`Search timed out after ${SEARCH_TIMEOUT_MS / 1000} seconds`);
+      }
+      throw error;
    }
-
-   const responseData: any = await response.json();
-
-   if (!responseData.serp || !responseData.serp.organicResults || responseData.serp.organicResults.length === 0) {
-      throw new Error("No search results found.");
-   }
-
-   const sortedResults = [...responseData.serp.organicResults].sort((a, b) => a.rank - b.rank);
-   let markdown = `# Search Results for "${query}"\n\n`;
-
-   for (const result of sortedResults) {
-      markdown += `[${result.name}](${result.url})\n`;
-      markdown += `${result.description || "No description available."}\n\n`;
-   }
-
-   return markdown;
 }
 
 export default function (pi: ExtensionAPI) {
@@ -73,33 +117,37 @@ export default function (pi: ExtensionAPI) {
          }),
       }),
       async execute(_toolCallId, params, _signal, onUpdate, ctx) {
+         const query = params.query;
+
          try {
             onUpdate?.({
                content: [
                   {
                      type: "text",
-                     text: `${USE_NERD_FONT ? "\udb81\udf0f " : ""}Searching the web for: "${params.query}"`,
+                     text: `${getIcon()}Searching the web for: "${query}"`,
                   },
                ],
-               details: { query: params.query },
+               details: { query },
             });
 
-            const resultText = await executeGoogleSearch(params.query, ctx);
+            const resultText = await executeGoogleSearch(query, ctx);
 
             return {
                content: [{ type: "text", text: resultText }],
-               details: { markdownContent: resultText },
+               details: { markdownContent: resultText, query },
             };
          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             console.error("Web search error:", error);
+
             return {
                content: [
                   {
                      type: "text",
-                     text: `Web search failed: ${error instanceof Error ? error.message : String(error)}`,
+                     text: `Web search failed: ${errorMessage}`,
                   },
                ],
-               details: { markdownContent: "" },
+               details: { markdownContent: "", query },
                isError: true,
             };
          }
@@ -107,10 +155,8 @@ export default function (pi: ExtensionAPI) {
       renderResult(result, _options, _theme, _context) {
          const markdownTheme = getMarkdownTheme();
 
-         const markdownText =
-            result.details && typeof result.details === "object" && "markdownContent" in result.details
-               ? String((result.details as { markdownContent?: unknown }).markdownContent ?? "")
-               : "";
+         const details = result.details as { markdownContent?: string } | undefined;
+         const markdownText = details?.markdownContent ?? "";
 
          if (markdownText.trim()) {
             return new Markdown(markdownText, 1, 1, markdownTheme);
@@ -135,18 +181,24 @@ export default function (pi: ExtensionAPI) {
          }
 
          const query = args.trim();
-
-         // show loading status in footer with theme styling
          const theme = ctx.ui.theme;
-         ctx.ui.setStatus(
-            "google-search",
-            theme.fg("muted", `${USE_NERD_FONT ? "\udb81\udf0f " : ""}Searching the web for: "${query}"...`),
-         );
+         const icon = getIcon();
+
+         // Animated ellipsis status
+         let frame = 0;
+         const interval = setInterval(() => {
+            frame++;
+            ctx.ui.setStatus(
+               "google-search",
+               theme.fg("muted", `${icon}Searching the web for: "${query}"${getEllipsis(frame)}`),
+            );
+         }, 200);
 
          try {
             const toolResult = await executeGoogleSearch(query, ctx);
 
-            // clear loading status
+            // clear loading status and interval
+            clearInterval(interval);
             ctx.ui.setStatus("google-search", undefined);
 
             pi.sendMessage({
@@ -156,8 +208,10 @@ export default function (pi: ExtensionAPI) {
                details: { query, source: "slash-command" },
             });
          } catch (error) {
+            clearInterval(interval);
             ctx.ui.setStatus("google-search", undefined);
-            ctx.ui.notify(`Google search failed: ${error instanceof Error ? error.message : String(error)}`, "error");
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            ctx.ui.notify(`Google search failed: ${errorMessage}`, "error");
          }
       },
    });
