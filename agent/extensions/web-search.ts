@@ -104,12 +104,12 @@ async function executeGoogleSearch(query: string, ctx: any): Promise<string> {
 
 export default function (pi: ExtensionAPI) {
    pi.registerTool({
-      name: "google-search",
-      label: "Google web search",
+      name: "web-search",
+      label: "Web search",
       description: "Search Google for a list of results that you can then read using the web-scrape tool",
       promptGuidelines: [
-         "Use google-search when the user wants up-to-date information about something.",
-         "google-search only provides a list of page URLs and summaries: use web-scrape to get full content from results.",
+         "Use web-search when the user wants up-to-date information about something.",
+         "web-search only provides a list of page URLs and summaries: use web-scrape to get full content from results.",
       ],
       parameters: Type.Object({
          query: Type.String({

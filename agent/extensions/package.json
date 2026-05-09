@@ -16,7 +16,7 @@
          "./guard/guard.ts",
          "./stt/stt.ts",
          "startup-header.ts",
-         "google-search.ts",
+         "web-search.ts",
          "web-scrape.ts",
          "todo.ts"
       ]
