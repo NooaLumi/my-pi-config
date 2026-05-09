@@ -14,8 +14,16 @@ function isDangerousCommand(command: string): boolean {
    const ops = tokens.filter((t) => typeof t === "object" && t !== null && "op" in t).map((t) => t.op);
 
    // shell output redirection can overwrite files
-   if (ops.some((op) => op === ">" || op === ">>")) {
-      return true;
+   // ignore >/dev/null 
+   if (ops.some((op) => op === ">")) {
+      const hasDangerousRedirection = tokens.some((token, i, arr) => {
+         if (typeof token !== "object" || token === null || !("op" in token) || (token.op !== ">")) return false;
+
+         const nextToken = arr[i + 1];
+         return typeof nextToken === "string" && nextToken === "/dev/null";
+      });
+      
+      if (hasDangerousRedirection) return true;
    }
 
    // get non-control operators
