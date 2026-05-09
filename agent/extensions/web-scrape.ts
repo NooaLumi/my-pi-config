@@ -58,8 +58,8 @@ export default function (pi: ExtensionAPI) {
    pi.registerTool({
       name: "web-scrape",
       label: "Web scrape",
-      description: "Get the page contents of a URL/link",
-      promptGuidelines: ["Use web-scrape to get the full web page content from a URL."],
+      promptSnippet: "Get the page contents from a URL/link",
+      description: "Get the page contents from a URL/link",
       parameters: Type.Object({
          url: Type.String({
             description: "URL to scrape",

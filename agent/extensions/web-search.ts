@@ -106,7 +106,8 @@ export default function (pi: ExtensionAPI) {
    pi.registerTool({
       name: "web-search",
       label: "Web search",
-      description: "Search Google for a list of results that you can then read using the web-scrape tool",
+      promptSnippet: "Search the web using Google for a list of results",
+      description: "Search the web using Google for a list of results",
       promptGuidelines: [
          "Use web-search when the user wants up-to-date information about something.",
          "web-search only provides a list of page URLs and summaries: use web-scrape to get full content from results.",
