@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.72.0",
+  "lastChangelogVersion": "0.74.0",
   "defaultProvider": "mistral",
   "defaultModel": "mistral-medium-3.5",
   "hideThinkingBlock": false,
@@ -9,5 +9,5 @@
     "mistral/devstral-medium-latest",
     "mistral/mistral-small-latest"
   ],
-  "defaultThinkingLevel": "off"
+  "defaultThinkingLevel": "high"
 }
