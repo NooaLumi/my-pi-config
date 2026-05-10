@@ -23,7 +23,7 @@
       ]
    },
    "peerDependencies": {
-      "@mariozechner/pi-coding-agent": "*"
+      "@earendil-works/pi-coding-agent": "*"
    },
    "dependencies": {
       "@mistralai/mistralai": "^2.2.1",

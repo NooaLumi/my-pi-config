@@ -11,7 +11,7 @@
    ],
    "author": "Nooa Lumilaakso",
    "peerDependencies": {
-      "@mariozechner/pi-coding-agent": "*"
+      "@earendil-works/pi-coding-agent": "*"
    },
    "dependencies": {
       "shell-quote": "^1.8.3"
