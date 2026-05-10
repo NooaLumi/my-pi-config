@@ -2,14 +2,9 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
 import { Markdown } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { getIcon, Icon } from "../util.js";
+import { getIcon, Icon, withEllipsisAnimation } from "../util.js";
 
 const SEARCH_TIMEOUT_MS = 30000;
-
-function getEllipsis(frame: number): string {
-   const frames = [".", "..", "..."];
-   return frames[frame % frames.length];
-}
 
 async function executeGoogleSearch(query: string, ctx: any): Promise<string> {
    const sanitizedQuery = query.trim();
@@ -181,21 +176,14 @@ export default function (pi: ExtensionAPI) {
          const theme = ctx.ui.theme;
          const icon = getIcon(Icon.Search);
 
-         // Animated ellipsis status
-         let frame = 0;
-         const interval = setInterval(() => {
-            frame++;
-            ctx.ui.setStatus(
-               "google-search",
-               theme.fg("muted", `${icon}Searching the web for: "${query}"${getEllipsis(frame)}`),
-            );
-         }, 200);
+         const clearEllipsis = withEllipsisAnimation((ellipsis: string) => {
+            ctx.ui.setStatus("google-search", theme.fg("muted", `${icon}Searching the web for: "${query}"${ellipsis}`));
+         });
 
          try {
             const toolResult = await executeGoogleSearch(query, ctx);
 
-            // clear loading status and interval
-            clearInterval(interval);
+            clearEllipsis();
             ctx.ui.setStatus("google-search", undefined);
 
             pi.sendMessage({
@@ -205,7 +193,7 @@ export default function (pi: ExtensionAPI) {
                details: { query, source: "slash-command" },
             });
          } catch (error) {
-            clearInterval(interval);
+            clearEllipsis();
             ctx.ui.setStatus("google-search", undefined);
             const errorMessage = error instanceof Error ? error.message : String(error);
             ctx.ui.notify(`Google search failed: ${errorMessage}`, "error");

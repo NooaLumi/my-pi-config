@@ -7,7 +7,7 @@ import { Key, Markdown, matchesKey } from "@earendil-works/pi-tui";
 import { Mistral } from "@mistralai/mistralai";
 import { Type } from "@sinclair/typebox";
 import { existsSync, mkdirSync, readFileSync } from "fs";
-import { getIcon, Icon } from "../util.js";
+import { getIcon, Icon, withEllipsisAnimation } from "../util.js";
 
 function getRecordingsDir(): string {
    const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -243,11 +243,14 @@ export default function (pi: ExtensionAPI) {
                return;
             }
 
-            // Show loading status in footer
-            ctx.ui.setStatus("stt", theme.fg("muted", `${getIcon(Icon.Cogwheel)}Transcribing audio...`));
+            const icon = getIcon(Icon.Cogwheel);
+            const clearEllipsis = withEllipsisAnimation((ellipsis: string) => {
+               ctx.ui.setStatus("stt", theme.fg("muted", `${icon}Transcribing audio${ellipsis}`));
+            });
 
             try {
                const toolResult = await transcribeAudio(result.filePath, ctx);
+               clearEllipsis();
                ctx.ui.setStatus("stt", undefined);
 
                ctx.ui.notify(`Transcription:\n\n${toolResult}`, "info");
@@ -269,6 +272,7 @@ export default function (pi: ExtensionAPI) {
                   });
                }
             } catch (error) {
+               clearEllipsis();
                ctx.ui.setStatus("stt", undefined);
                const errorMessage = error instanceof Error ? error.message : String(error);
                ctx.ui.notify(`Transcription failed: ${errorMessage}`, "error");
@@ -280,14 +284,14 @@ export default function (pi: ExtensionAPI) {
          // ----- Filepath mode (no recording) ----- //
          const filePath = args.trim();
 
-         // Show loading status in footer
-         ctx.ui.setStatus(
-            "stt",
-            theme.fg("muted", `${getIcon(Icon.Cogwheel)}Transcribing audio file: "${filePath}"...`),
-         );
+         const icon = getIcon(Icon.Cogwheel);
+         const clearEllipsis = withEllipsisAnimation((ellipsis: string) => {
+            ctx.ui.setStatus("stt", theme.fg("muted", `${icon}Transcribing audio file: "${filePath}"${ellipsis}`));
+         });
 
          try {
             const toolResult = await transcribeAudio(filePath, ctx);
+            clearEllipsis();
             ctx.ui.setStatus("stt", undefined);
 
             pi.sendMessage({
@@ -297,6 +301,7 @@ export default function (pi: ExtensionAPI) {
                details: { filePath, source: "slash-command" },
             });
          } catch (error) {
+            clearEllipsis();
             ctx.ui.setStatus("stt", undefined);
             const errorMessage = error instanceof Error ? error.message : String(error);
             ctx.ui.notify(`Transcription failed: ${errorMessage}`, "error");

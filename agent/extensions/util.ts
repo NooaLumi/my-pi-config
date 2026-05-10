@@ -1,3 +1,20 @@
+function getEllipsis(frame: number): string {
+   const frames = [".", "..", "..."];
+   return frames[frame % frames.length];
+}
+
+export function withEllipsisAnimation(fn: (ellipsis: string) => void, intervalMs: number = 200) {
+   let frame = 0;
+   const interval = setInterval(() => {
+      frame++;
+      fn(getEllipsis(frame));
+   }, intervalMs);
+
+   return () => {
+      clearInterval(interval);
+   };
+}
+
 export enum Icon {
    Cogwheel,
    Record,

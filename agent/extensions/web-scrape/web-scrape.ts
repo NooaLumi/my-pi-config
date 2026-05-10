@@ -2,7 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
 import { Markdown } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { getIcon, Icon } from "../util.js";
+import { getIcon, Icon, withEllipsisAnimation } from "../util.js";
 
 async function executeScrape(url: string, ctx: any) {
    // ~/.pi/agent/auth.json
@@ -126,15 +126,17 @@ export default function (pi: ExtensionAPI) {
          }
 
          const url = args.trim();
-
-         // show loading status in footer with theme styling
          const theme = ctx.ui.theme;
-         ctx.ui.setStatus("web-scrape", theme.fg("muted", `${getIcon(Icon.Search)}Scraping the site at: "${url}"...`));
+         const icon = getIcon(Icon.Search);
+
+         const clearEllipsis = withEllipsisAnimation((ellipsis: string) => {
+            ctx.ui.setStatus("web-scrape", theme.fg("muted", `${icon}Scraping the site at: "${url}"${ellipsis}`));
+         });
 
          try {
             const toolResult = await executeScrape(url, ctx);
 
-            // clear loading status
+            clearEllipsis();
             ctx.ui.setStatus("web-scrape", undefined);
 
             pi.sendMessage({
@@ -144,6 +146,7 @@ export default function (pi: ExtensionAPI) {
                details: { url, source: "slash-command" },
             });
          } catch (error) {
+            clearEllipsis();
             ctx.ui.setStatus("web-scrape", undefined);
             ctx.ui.notify(`Web scrape failed: ${error instanceof Error ? error.message : String(error)}`, "error");
          }
