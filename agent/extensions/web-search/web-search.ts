@@ -2,17 +2,13 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
 import { Markdown } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
+import { getIcon, Icon } from "../util.js";
 
-const USE_NERD_FONT = true;
 const SEARCH_TIMEOUT_MS = 30000;
 
 function getEllipsis(frame: number): string {
    const frames = [".", "..", "..."];
    return frames[frame % frames.length];
-}
-
-function getIcon(): string {
-   return USE_NERD_FONT ? "\udb81\udf0f " : "";
 }
 
 async function executeGoogleSearch(query: string, ctx: any): Promise<string> {
@@ -79,7 +75,7 @@ async function executeGoogleSearch(query: string, ctx: any): Promise<string> {
       const results = organicResults as Array<{ name: string; url: string; description?: string; rank: number }>;
       const sortedResults = [...results].sort((a, b) => a.rank - b.rank);
 
-      const icon = getIcon();
+      const icon = getIcon(Icon.Search);
       let markdown = `${icon}# Search Results for "${sanitizedQuery}"`;
       markdown += `\n\n*Found ${sortedResults.length} result${sortedResults.length !== 1 ? "s" : ""}*\n\n`;
 
@@ -125,7 +121,7 @@ export default function (pi: ExtensionAPI) {
                content: [
                   {
                      type: "text",
-                     text: `${getIcon()}Searching the web for: "${query}"`,
+                     text: `${getIcon(Icon.Search)}Searching the web for: "${query}"`,
                   },
                ],
                details: { query },
@@ -183,7 +179,7 @@ export default function (pi: ExtensionAPI) {
 
          const query = args.trim();
          const theme = ctx.ui.theme;
-         const icon = getIcon();
+         const icon = getIcon(Icon.Search);
 
          // Animated ellipsis status
          let frame = 0;

@@ -2,8 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
 import { Markdown } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
-
-const USE_NERD_FONT = true; // * NOTE: toggle this off if your font doesn't support Nerd Font icons
+import { getIcon, Icon } from "../util.js";
 
 async function executeScrape(url: string, ctx: any) {
    // ~/.pi/agent/auth.json
@@ -71,7 +70,7 @@ export default function (pi: ExtensionAPI) {
                content: [
                   {
                      type: "text",
-                     text: `${USE_NERD_FONT ? "\udb81\udf0f " : ""}Scraping the site at: "${params.url}"`,
+                     text: `${getIcon(Icon.Search)}Scraping the site at: "${params.url}"`,
                   },
                ],
                details: { query: params.url },
@@ -130,10 +129,7 @@ export default function (pi: ExtensionAPI) {
 
          // show loading status in footer with theme styling
          const theme = ctx.ui.theme;
-         ctx.ui.setStatus(
-            "web-scrape",
-            theme.fg("muted", `${USE_NERD_FONT ? "\udb81\udf0f " : ""}Scraping the site at: "${url}"...`),
-         );
+         ctx.ui.setStatus("web-scrape", theme.fg("muted", `${getIcon(Icon.Search)}Scraping the site at: "${url}"...`));
 
          try {
             const toolResult = await executeScrape(url, ctx);

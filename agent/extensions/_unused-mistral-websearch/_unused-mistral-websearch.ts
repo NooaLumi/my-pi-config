@@ -4,8 +4,7 @@ import { Markdown } from "@earendil-works/pi-tui";
 import { Mistral } from "@mistralai/mistralai";
 import type { ConversationResponse } from "@mistralai/mistralai/models/components";
 import { Type } from "@sinclair/typebox";
-
-const USE_NERD_FONT = true; // * NOTE: toggle this off if your font doesn't support Nerd Font icons
+import { getIcon, Icon } from "../util.js";
 
 const COMPLETION_ARGS = {
    temperature: 0.1,
@@ -44,7 +43,7 @@ export default function (pi: ExtensionAPI) {
                content: [
                   {
                      type: "text",
-                     text: `${USE_NERD_FONT ? "\udb81\udf0f " : ""}Searching the web for: "${params.query}"`,
+                     text: `${getIcon(Icon.Search)}Searching the web for: "${params.query}"`,
                   },
                ],
                details: { query: params.query },
@@ -87,7 +86,7 @@ export default function (pi: ExtensionAPI) {
                         formattedOutput +
                         output.content.reduce((acc, item) => {
                            if (item.type === "tool_reference") {
-                              return `${acc}\n${USE_NERD_FONT ? "\udb81\udf0f " : ""}[${item.title}](${item.url})`;
+                              return `${acc}\n${getIcon(Icon.Search)}[${item.title}](${item.url})`;
                            } else if (item.type === "text") {
                               // sometimes text section begins with a period sign for no fucking reason at all so drop that
                               return `${acc}\n${item.text?.[0] === "." ? item.text.slice(1) : item.text}`;

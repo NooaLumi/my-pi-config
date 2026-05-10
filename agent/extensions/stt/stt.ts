@@ -6,26 +6,8 @@ import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
 import { Key, Markdown, matchesKey } from "@earendil-works/pi-tui";
 import { Mistral } from "@mistralai/mistralai";
 import { Type } from "@sinclair/typebox";
-
 import { existsSync, mkdirSync, readFileSync } from "fs";
-
-const USE_NERD_FONT = true;
-
-enum Icon {
-   Cogwheel,
-   Record,
-}
-
-function getIcon(type: Icon): string {
-   if (!USE_NERD_FONT) return "";
-
-   switch (type) {
-      case Icon.Cogwheel:
-         return "\uf013 ";
-      case Icon.Record:
-         return "\udb81\udc4a ";
-   }
-}
+import { getIcon, Icon } from "../util.js";
 
 function getRecordingsDir(): string {
    const __dirname = dirname(fileURLToPath(import.meta.url));
