@@ -38,7 +38,6 @@
       "@earendil-works/pi-coding-agent": "*"
    },
    "dependencies": {
-      "@mistralai/mistralai": "^2.2.1",
       "@sinclair/typebox": "^0.34.49"
    },
    "devDependencies": {

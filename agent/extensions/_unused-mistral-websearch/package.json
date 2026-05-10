@@ -9,5 +9,8 @@
    "keywords": [
       "pi-package"
    ],
-   "author": "Nooa Lumilaakso"
+   "author": "Nooa Lumilaakso",
+   "dependencies": {
+      "@mistralai/mistralai": "^2.2.1"
+   }
 }
