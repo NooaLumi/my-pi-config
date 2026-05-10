@@ -14,15 +14,15 @@ function isDangerousCommand(command: string): boolean {
    const ops = tokens.filter((t) => typeof t === "object" && t !== null && "op" in t).map((t) => t.op);
 
    // shell output redirection can overwrite files
-   // ignore >/dev/null 
+   // ignore >/dev/null
    if (ops.some((op) => op === ">")) {
       const allRedirectionsSafe = tokens.every((token, i, arr) => {
-         if (typeof token !== "object" || token === null || !("op" in token) || (token.op !== ">")) return true;
+         if (typeof token !== "object" || token === null || !("op" in token) || token.op !== ">") return true;
 
          const nextToken = arr[i + 1];
          return typeof nextToken === "string" && nextToken === "/dev/null";
       });
-      
+
       if (!allRedirectionsSafe) return true;
    }
 

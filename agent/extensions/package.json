@@ -11,15 +11,27 @@
       "mistral"
    ],
    "author": "Nooa Lumilaakso",
+   "workspaces": [
+      "debug",
+      "guard",
+      "identity",
+      "startup-header",
+      "stt",
+      "todo",
+      "web-scrape",
+      "web-search",
+      "_unused-mistral-websearch",
+      "_unused-ollama-summarizer"
+   ],
    "pi": {
       "extensions": [
          "./guard/guard.ts",
          "./identity/identity.ts",
+         "./startup-header/startup-header.ts",
          "./stt/stt.ts",
-         "startup-header.ts",
-         "web-search.ts",
-         "web-scrape.ts",
-         "todo.ts"
+         "./todo/todo.ts",
+         "./web-scrape/web-scrape.ts",
+         "./web-search/web-search.ts"
       ]
    },
    "peerDependencies": {

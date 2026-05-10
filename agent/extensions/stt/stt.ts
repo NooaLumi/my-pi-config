@@ -13,7 +13,7 @@ const USE_NERD_FONT = true;
 
 enum Icon {
    Cogwheel,
-   Record 
+   Record,
 }
 
 function getIcon(type: Icon): string {
@@ -268,7 +268,7 @@ export default function (pi: ExtensionAPI) {
                const toolResult = await transcribeAudio(result.filePath, ctx);
                ctx.ui.setStatus("stt", undefined);
 
-               ctx.ui.notify(`Transcription:\n\n${toolResult}`, 'info');
+               ctx.ui.notify(`Transcription:\n\n${toolResult}`, "info");
 
                const action = await ctx.ui.select("Transcription ready", ["Send", "Edit", "Copy"]);
 
@@ -299,7 +299,10 @@ export default function (pi: ExtensionAPI) {
          const filePath = args.trim();
 
          // Show loading status in footer
-         ctx.ui.setStatus("stt", theme.fg("muted", `${getIcon(Icon.Cogwheel)}Transcribing audio file: "${filePath}"...`));
+         ctx.ui.setStatus(
+            "stt",
+            theme.fg("muted", `${getIcon(Icon.Cogwheel)}Transcribing audio file: "${filePath}"...`),
+         );
 
          try {
             const toolResult = await transcribeAudio(filePath, ctx);

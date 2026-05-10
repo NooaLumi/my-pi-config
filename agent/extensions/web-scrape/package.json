@@ -1,5 +1,5 @@
 {
-   "name": "identity",
+   "name": "web-scrape",
    "version": "0.1.0",
    "license": "MIT",
    "type": "module",
@@ -9,5 +9,8 @@
    "keywords": [
       "pi-package"
    ],
-   "author": "Nooa Lumilaakso"
+   "author": "Nooa Lumilaakso",
+   "dependencies": {
+      "@earendil-works/pi-tui": "*"
+   }
 }

@@ -10,18 +10,7 @@
       "pi-package"
    ],
    "author": "Nooa Lumilaakso",
-   "peerDependencies": {
-      "@earendil-works/pi-coding-agent": "*"
-   },
    "dependencies": {
       "@mistralai/mistralai": "^1.0.0"
-   },
-   "devDependencies": {
-      "@biomejs/biome": "2.3.5",
-      "@types/node": "^25.6.0",
-      "@types/shell-quote": "^1.7.5",
-      "@typescript/native-preview": "^7.0.0-dev.20260425.1",
-      "tsx": "^4.21.0",
-      "typescript": "^6.0.3"
    }
 }
