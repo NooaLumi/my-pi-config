@@ -11,8 +11,20 @@ import { existsSync, mkdirSync, readFileSync } from "fs";
 
 const USE_NERD_FONT = true;
 
-function getIcon(): string {
-   return USE_NERD_FONT ? "\udb81\udf0f " : "";
+enum Icon {
+   Cogwheel,
+   Record 
+}
+
+function getIcon(type: Icon): string {
+   if (!USE_NERD_FONT) return "";
+
+   switch (type) {
+      case Icon.Cogwheel:
+         return "\uf013 ";
+      case Icon.Record:
+         return "\udb81\udc4a ";
+   }
 }
 
 function getRecordingsDir(): string {
@@ -131,7 +143,7 @@ function createRecordingComponent(
          const minutes = Math.floor(elapsed / 60);
          const seconds = elapsed % 60;
          const timeStr = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-         const icon = getIcon();
+         const icon = getIcon(Icon.Record);
 
          return [
             theme.fg("accent", "─".repeat(width)),
@@ -173,7 +185,7 @@ export default function (pi: ExtensionAPI) {
                content: [
                   {
                      type: "text",
-                     text: `${getIcon()}Transcribing audio file: "${params.filePath}"`,
+                     text: `${getIcon(Icon.Cogwheel)}Transcribing audio file: "${params.filePath}"`,
                   },
                ],
                details: { filePath: params.filePath },
@@ -243,23 +255,26 @@ export default function (pi: ExtensionAPI) {
             // Show the recorded file path and ask to transcribe
             ctx.ui.notify(`Recorded: ${result.filePath}`, "info");
 
-            const transcribe = await ctx.ui.confirm("Transcribe?", `Send "${result.filePath}" to STT service?`);
+            const transcribe = await ctx.ui.confirm("Transcribe?", "");
 
             if (!transcribe) {
                return;
             }
 
             // Show loading status in footer
-            ctx.ui.setStatus("stt", theme.fg("muted", `${getIcon()}Transcribing audio file: "${result.filePath}"...`));
+            ctx.ui.setStatus("stt", theme.fg("muted", `${getIcon(Icon.Cogwheel)}Transcribing audio...`));
 
             try {
                const toolResult = await transcribeAudio(result.filePath, ctx);
                ctx.ui.setStatus("stt", undefined);
 
-               // Ask to use as prompt to AI or just copy to clipboard
-               const action = await ctx.ui.select("Transcription ready", ["Send as user message", "Copy to clipboard"]);
+               ctx.ui.notify(`Transcription:\n\n${toolResult}`, 'info');
 
-               if (action === "Send as user message") {
+               const action = await ctx.ui.select("Transcription ready", ["Send", "Edit", "Copy"]);
+
+               if (action === "Edit") {
+                  ctx.ui.setEditorText(toolResult);
+               } else if (action === "Send") {
                   pi.sendUserMessage(toolResult);
                } else {
                   await copyToClipboard(toolResult, ctx);
@@ -284,7 +299,7 @@ export default function (pi: ExtensionAPI) {
          const filePath = args.trim();
 
          // Show loading status in footer
-         ctx.ui.setStatus("stt", theme.fg("muted", `${getIcon()}Transcribing audio file: "${filePath}"...`));
+         ctx.ui.setStatus("stt", theme.fg("muted", `${getIcon(Icon.Cogwheel)}Transcribing audio file: "${filePath}"...`));
 
          try {
             const toolResult = await transcribeAudio(filePath, ctx);
