@@ -25,6 +25,7 @@
       ]
     },
     "mistral": {
+      "baseUrl": "https://api.eu.mistral.ai",
       "modelOverrides": {
         "mistral-medium-3.5": {
           "thinkingLevelMap": {

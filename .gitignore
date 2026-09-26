@@ -4,3 +4,4 @@ node_modules/
 agent/sessions/
 agent/auth.json
 recordings/
+models-store.json
