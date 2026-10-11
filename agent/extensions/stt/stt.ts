@@ -2,7 +2,7 @@ import { type ChildProcess, spawn } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
+import { getMarkdownTheme, readStoredCredential } from "@earendil-works/pi-coding-agent";
 import { Key, Markdown, matchesKey } from "@earendil-works/pi-tui";
 import { Mistral } from "@mistralai/mistralai";
 import { Type } from "@sinclair/typebox";
@@ -24,8 +24,9 @@ function generateRecordingPath(): string {
    return join(dir, `recording-${timestamp}.mp3`);
 }
 
-async function transcribeAudio(filePath: string, ctx: any): Promise<string> {
-   const mistralKey = await ctx.modelRegistry.authStorage.getApiKey("mistral");
+async function transcribeAudio(filePath: string, _ctx: any): Promise<string> {
+   const credential = readStoredCredential("mistral");
+   const mistralKey = (credential as { key?: string })?.key;
 
    if (!mistralKey) {
       throw new Error('Mistral API key not found. Add it to ~/.pi/agent/auth.json with key: "mistral"');

@@ -1,39 +1,39 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
+import { getMarkdownTheme, readStoredCredential } from "@earendil-works/pi-coding-agent";
 import { Markdown } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
 import { getIcon, Icon, withEllipsisAnimation } from "../util.js";
 
 const SEARCH_TIMEOUT_MS = 30000;
 
-async function executeGoogleSearch(query: string, ctx: any): Promise<string> {
+async function executeGoogleSearch(query: string, _ctx: any): Promise<string> {
    const sanitizedQuery = query.trim();
    if (!sanitizedQuery) {
       throw new Error("Search query cannot be empty");
    }
 
-   const zyteKey = await ctx.modelRegistry.authStorage.getApiKey("zyte");
+   const credential = readStoredCredential("zyte");
+   const zyteKey = credential?.key;
 
    if (!zyteKey) {
       throw new Error('Zyte API key not found. Add it to ~/.pi/agent/auth.json with key: "zyte"');
    }
 
-   const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(sanitizedQuery)}`;
-
    const controller = new AbortController();
    const timeoutId = setTimeout(() => controller.abort(), SEARCH_TIMEOUT_MS);
 
    try {
-      const response = await fetch("https://api.zyte.com/v1/extract", {
+      const response = await fetch("https://api.zyte.com/v1/search", {
          method: "POST",
          headers: {
             "Content-Type": "application/json",
             Authorization: `Basic ${Buffer.from(`${zyteKey}:`).toString("base64")}`,
          },
          body: JSON.stringify({
-            url: searchUrl,
-            serp: true,
-            serpOptions: { extractFrom: "httpResponseBody" },
+            domain: 'google.com',
+            query: sanitizedQuery,
+            include: ['organic'],
+            maxResults: 10 // 10, 20 ... 100
          }),
          signal: controller.signal,
       });
@@ -57,17 +57,12 @@ async function executeGoogleSearch(query: string, ctx: any): Promise<string> {
          throw new Error("Invalid response format from Zyte API");
       }
 
-      const serp = (responseData as { serp?: unknown }).serp;
-      if (!serp || typeof serp !== "object") {
-         throw new Error("No SERP data in response");
-      }
-
-      const organicResults = (serp as { organicResults?: unknown }).organicResults;
+      const organicResults = (responseData as { organicResults?: unknown }).organicResults;
       if (!Array.isArray(organicResults) || organicResults.length === 0) {
          throw new Error("No search results found.");
       }
 
-      const results = organicResults as Array<{ name: string; url: string; description?: string; rank: number }>;
+      const results = organicResults as Array<{ title: string; url: string; snippet?: string; rank: number, displayedUrl: string }>;
       const sortedResults = [...results].sort((a, b) => a.rank - b.rank);
 
       const icon = getIcon(Icon.Search);
@@ -75,10 +70,9 @@ async function executeGoogleSearch(query: string, ctx: any): Promise<string> {
       markdown += `\n\n*Found ${sortedResults.length} result${sortedResults.length !== 1 ? "s" : ""}*\n\n`;
 
       for (const result of sortedResults) {
-         const displayUrl = result.url.replace(/^https?:\/\//, "");
-         markdown += `### [${result.name}](${result.url})\n`;
-         markdown += `${displayUrl}\n\n`;
-         markdown += `${result.description || "No description available."}\n\n`;
+         markdown += `### [${result.title}](${result.url})\n`;
+         markdown += `${result.displayedUrl}\n\n`;
+         markdown += `${result.snippet || "No description available."}\n\n`;
          markdown += "---\n\n";
       }
 

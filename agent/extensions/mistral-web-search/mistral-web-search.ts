@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
+import { getMarkdownTheme, readStoredCredential } from "@earendil-works/pi-coding-agent";
 import { Markdown } from "@earendil-works/pi-tui";
 import { Mistral } from "@mistralai/mistralai";
 import type { ConversationResponse } from "@mistralai/mistralai/models/components";
@@ -20,7 +20,7 @@ const TOOLS = [
    },
 ];
 
-const INSTRUCTIONS = `You are a focused assistant that searches the web.
+const INSTRUCTIONS = `You are a focused assistant that searches the web with 'web_search'.
 You must always search the web for answers.
 ALWAYS provide sources for all information.
 Do not ask follow-up questions, but if relevant, provide links for further reading.
@@ -29,15 +29,20 @@ Respond in markdown format with no other markup.`;
 
 export default function (pi: ExtensionAPI) {
    pi.registerTool({
-      name: "websearch",
+      name: "web-search",
       label: "Web Search",
-      description: "Find up-to-date information on the internet",
+      promptSnippet: "Search the web for results",
+      description: "Search the web for results",
+      promptGuidelines: [
+         "Use web-search when the user wants up-to-date information about something.",
+         "Use web-scrape to get full content from results.",
+      ],
       parameters: Type.Object({
          query: Type.String({
             description: "The search query or question to look up on the internet",
          }),
       }),
-      async execute(_toolCallId, params, _signal, onUpdate, ctx) {
+      async execute(_toolCallId, params, _signal, onUpdate, _ctx) {
          try {
             onUpdate?.({
                content: [
@@ -50,7 +55,8 @@ export default function (pi: ExtensionAPI) {
             });
 
             // get mistral API key from auth storage
-            const mistralKey = await ctx.modelRegistry.authStorage.getApiKey("mistral");
+            const credential = readStoredCredential("mistral");
+            const mistralKey = (credential as { key?: string })?.key;
 
             if (!mistralKey) {
                throw new Error("Mistral API key not found in auth storage");
@@ -61,7 +67,7 @@ export default function (pi: ExtensionAPI) {
             });
 
             const response = await client.beta.conversations.start({
-               inputs: `${params.query}. Format response as pure markdown`,
+               inputs: `Search the web for "${params.query}" and provide a list of result URLs with titles and summaries. Rank by relevance. Format response as pure markdown`,
                model: "mistral-medium-latest",
                instructions: INSTRUCTIONS,
                completionArgs: COMPLETION_ARGS,

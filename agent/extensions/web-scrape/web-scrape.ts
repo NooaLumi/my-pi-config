@@ -1,12 +1,13 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
+import { getMarkdownTheme, readStoredCredential } from "@earendil-works/pi-coding-agent";
 import { Markdown } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
 import { getIcon, Icon, withEllipsisAnimation } from "../util.js";
 
-async function executeScrape(url: string, ctx: any) {
+async function executeScrape(url: string, _ctx: any) {
    // ~/.pi/agent/auth.json
-   const zyteKey = await ctx.modelRegistry.authStorage.getApiKey("zyte");
+   const credential = readStoredCredential("zyte");
+   const zyteKey = credential?.key;
 
    if (!zyteKey) {
       throw new Error("Zyte API key not found in auth storage");

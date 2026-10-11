@@ -19,8 +19,8 @@
       "stt",
       "todo",
       "web-scrape",
-      "web-search",
-      "_unused-mistral-websearch",
+      "mistral-web-search",
+      "_unused-web-search",
       "_unused-ollama-summarizer"
    ],
    "pi": {
@@ -31,7 +31,7 @@
          "./stt/stt.ts",
          "./todo/todo.ts",
          "./web-scrape/web-scrape.ts",
-         "./web-search/web-search.ts"
+         "./mistral-web-search/mistral-web-search.ts"
       ]
    },
    "peerDependencies": {

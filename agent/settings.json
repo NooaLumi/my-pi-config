@@ -1,12 +1,12 @@
 {
-  "lastChangelogVersion": "0.87.1",
+  "lastChangelogVersion": "1.1.0",
   "defaultProvider": "mistral",
-  "defaultModel": "mistral-medium-3.5",
+  "defaultModel": "mistral-large-4",
   "hideThinkingBlock": false,
   "quietStartup": true,
   "enabledModels": [
+    "mistral/mistral-large-4",
     "mistral/mistral-medium-3.5",
-    "mistral/devstral-medium-latest",
     "mistral/mistral-small-latest"
   ],
   "defaultThinkingLevel": "high",
