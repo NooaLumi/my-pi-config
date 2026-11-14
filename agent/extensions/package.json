@@ -13,6 +13,7 @@
    "author": "Nooa Lumilaakso",
    "workspaces": [
       "debug",
+      "fix-mistral",
       "guard",
       "identity",
       "startup-header",
@@ -25,6 +26,7 @@
    ],
    "pi": {
       "extensions": [
+         "./fix-mistral/fix-mistral.ts",
          "./guard/guard.ts",
          "./identity/identity.ts",
          "./startup-header/startup-header.ts",

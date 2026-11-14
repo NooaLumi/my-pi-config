@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.1.0",
+  "lastChangelogVersion": "1.5.2",
   "defaultProvider": "mistral",
   "defaultModel": "mistral-large-4",
   "hideThinkingBlock": false,
@@ -9,6 +9,7 @@
     "mistral/mistral-medium-3.5",
     "mistral/mistral-small-latest"
   ],
+  "defaultTools": ["+grep", "+find", "+ls"],
   "defaultThinkingLevel": "high",
   "theme": "dark"
 }
