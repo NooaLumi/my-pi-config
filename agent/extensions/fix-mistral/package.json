@@ -1,0 +1,13 @@
+{
+   "name": "fix-mistral",
+   "version": "0.1.0",
+   "license": "MIT",
+   "type": "module",
+   "scripts": {
+      "check": "biome check --write --error-on-warnings . && tsgo --noEmit"
+   },
+   "keywords": [
+      "pi-package"
+   ],
+   "author": "Nooa Lumilaakso"
+}
