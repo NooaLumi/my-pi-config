@@ -1,42 +1,7 @@
 {
   "providers": {
-    "ollama": {
-      "baseUrl": "http://localhost:11434/v1",
-      "api": "openai-completions",
-      "apiKey": "ollama",
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false
-      },
-      "models": [
-        {
-          "id": "qwen3-coder:30b"
-        },
-        {
-          "id": "deepseek-r1:14b"
-        },
-        {
-          "id": "qwen3.5:latest",
-          "input": [
-            "text",
-            "image"
-          ]
-        }
-      ]
-    },
     "mistral": {
-      "baseUrl": "https://api.eu.mistral.ai",
-      "modelOverrides": {
-        "mistral-medium-3.5": {
-          "thinkingLevelMap": {
-            "minimal": null,
-            "low": null,
-            "medium": null,
-            "high": "high",
-            "xhigh": null
-          }
-        }
-      }
+      "baseUrl": "https://api.eu.mistral.ai"
     }
   }
 }
