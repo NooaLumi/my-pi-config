@@ -40,7 +40,7 @@ async function transcribeAudio(filePath: string, _ctx: any): Promise<string> {
    });
 
    const transcriptionResponse = await client.audio.transcriptions.complete({
-      model: "voxtral-mini-transcribe-latest",
+      model: "voxtral-mini-latest",
       file: {
          fileName: filePath.split("/").pop() || "audio",
          content: audioFile,
