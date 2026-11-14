@@ -30,10 +30,10 @@ async function executeGoogleSearch(query: string, _ctx: any): Promise<string> {
             Authorization: `Basic ${Buffer.from(`${zyteKey}:`).toString("base64")}`,
          },
          body: JSON.stringify({
-            domain: 'google.com',
+            domain: "google.com",
             query: sanitizedQuery,
-            include: ['organic'],
-            maxResults: 10 // 10, 20 ... 100
+            include: ["organic"],
+            maxResults: 10, // 10, 20 ... 100
          }),
          signal: controller.signal,
       });
@@ -62,7 +62,13 @@ async function executeGoogleSearch(query: string, _ctx: any): Promise<string> {
          throw new Error("No search results found.");
       }
 
-      const results = organicResults as Array<{ title: string; url: string; snippet?: string; rank: number, displayedUrl: string }>;
+      const results = organicResults as Array<{
+         title: string;
+         url: string;
+         snippet?: string;
+         rank: number;
+         displayedUrl: string;
+      }>;
       const sortedResults = [...results].sort((a, b) => a.rank - b.rank);
 
       const icon = getIcon(Icon.Search);
