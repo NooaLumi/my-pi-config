@@ -5,3 +5,4 @@ agent/sessions/
 agent/auth.json
 recordings/
 models-store.json
+trust.json

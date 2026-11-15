@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "firefox-devtools": {
+      "enabled": false,
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mozilla/firefox-devtools-mcp@latest",
+        "--firefox-path",
+        "/usr/bin/librewolf",
+        "--connect-existing",
+        "--marionette-port",
+        "2828",
+        "--tool-preset",
+        "basic"
+      ]
+    }
+  }
+}

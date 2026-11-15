@@ -9,7 +9,11 @@
     "mistral/mistral-medium-3.5",
     "mistral/mistral-small-latest"
   ],
-  "defaultTools": ["+grep", "+find", "+ls"],
+  "defaultTools": [
+    "+grep",
+    "+find",
+    "+ls"
+  ],
   "defaultThinkingLevel": "high",
   "theme": "dark"
 }
