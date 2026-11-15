@@ -1,53 +1,52 @@
+import { tmpdir } from "node:os";
+import path from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { isToolCallEventType } from "@earendil-works/pi-coding-agent";
-import { parse as shellParse } from "shell-quote";
 
-function isDangerousCommand(command: string): boolean {
-   let tokens = [];
-   try {
-      tokens = shellParse(command);
-   } catch {
-      return true; // can't parse -> fuck off.
-   }
+const TMP_ROOTS = [tmpdir(), "/tmp", "/var/tmp"].map((r) => path.resolve(r));
+const DELETE_CMDS = new Set(["rm", "rmdir", "unlink"]);
+const INSTALLERS = new Set(["apt", "apt-get", "apk"]); // system-wide package managers
+const INSTALL_WORDS = new Set(["install", "add"]);
+const GIT_DANGEROUS = new Set(["commit", "push", "rm", "clean", "reset", "checkout", "restore"]);
 
-   // get control operators
-   const ops = tokens.filter((t) => typeof t === "object" && t !== null && "op" in t).map((t) => t.op);
+const stripQuotes = (w: string) => w.replace(/^["']|["']$/g, "");
 
-   // shell output redirection can overwrite files
-   // ignore >/dev/null
-   if (ops.some((op) => op === ">")) {
-      const allRedirectionsSafe = tokens.every((token, i, arr) => {
-         if (typeof token !== "object" || token === null || !("op" in token) || token.op !== ">") return true;
+function isInTmp(p: string, cwd: string, relativeOk: boolean): boolean {
+   p = stripQuotes(p);
+   if (relativeOk && !path.isAbsolute(p)) return true; // we cd'd into /tmp
+   const resolved = path.resolve(cwd, p);
+   return TMP_ROOTS.some((root) => resolved === root || resolved.startsWith(root + path.sep));
+}
 
-         const nextToken = arr[i + 1];
-         return typeof nextToken === "string" && nextToken === "/dev/null";
-      });
+// Returns a reason if the command looks like it removes something (outside
+// /tmp), installs a system package, or commits/pushes git changes.
+// Not adversarial-proof, just meant to catch accidents.
+export function findDanger(command: string, cwd: string): string | null {
+   let inTmpDir = false;
+   for (const part of command.split(/[;&|()\n`]+/)) {
+      const words = part.trim().split(/\s+/).filter(Boolean);
+      while (words.length > 0 && (words[0] === "sudo" || /^\w+=/.test(words[0]))) words.shift();
+      if (words.length === 0) continue;
 
-      if (!allRedirectionsSafe) return true;
-   }
+      const cmd = path.posix.basename(words[0]);
+      const args = words.slice(1).map(stripQuotes);
 
-   // get non-control operators
-   const cmds = tokens.filter((t) => typeof t === "string");
-
-   for (const cmd of cmds) {
-      const nogo = ["sudo", "rm", "rmdir", "unlink", "chmod", "chown", "eval", "source"];
-      if (nogo.includes(cmd)) return true;
-
-      // git commands
-      if (cmd === "git") {
-         const gitnogo = ["rm", "clean", "reset", "checkout", "restore", "push", "reflog", "gc", "rebase", "merge"];
-         if (gitnogo.some((danger) => cmds.includes(danger))) return true;
+      if (cmd === "cd") {
+         if (args[0] && isInTmp(args[0], cwd, false)) inTmpDir = true;
+         continue;
       }
-
-      // find -delete
-      if (cmd === "find" && cmds.includes("-delete")) return true;
-
-      // overwriting mv/cp
-      if (cmd === "mv" && (cmds.includes("-f") || cmds.includes("--force"))) return true;
-      if (cmd === "cp" && (cmds.includes("-f") || cmds.includes("--force"))) return true;
+      if (DELETE_CMDS.has(cmd)) {
+         const outside = args.filter((a) => !a.startsWith("-") && !isInTmp(a, cwd, inTmpDir));
+         if (outside.length > 0) return `${cmd} ${outside.join(" ")}`;
+      } else if (cmd === "git") {
+         const sub = args.find((a, i) => !a.startsWith("-") && !["-C", "-c"].includes(args[i - 1] ?? ""));
+         if (sub && GIT_DANGEROUS.has(sub)) return `git ${sub}`;
+      } else if (INSTALLERS.has(cmd)) {
+         const word = args.slice(0, 2).find((a) => INSTALL_WORDS.has(a));
+         if (word) return `${cmd} ${word}`;
+      }
    }
-
-   return false;
+   return null;
 }
 
 export default function (pi: ExtensionAPI) {
@@ -55,23 +54,29 @@ export default function (pi: ExtensionAPI) {
       if (!isToolCallEventType("bash", event)) return;
 
       const command = event.input.command;
-      const matched = isDangerousCommand(command);
-      if (!matched) return;
+      const reason = findDanger(command, ctx.cwd);
+      if (!reason) return;
 
       if (!ctx.hasUI) {
          return {
             block: true,
-            reason: `Command blocked (no UI for confirmation)`,
+            reason: `Command blocked (no UI for confirmation): ${reason}`,
          };
       }
 
       const choice = await ctx.ui.select(
-         `${ctx.ui.theme.fg("muted", `Clanker wants to run:`)}\n${ctx.ui.theme.fg("accent", command)}\n${ctx.ui.theme.fg("muted", "We good?")}`,
+         `${ctx.ui.theme.fg("muted", `Clanker wants to run:`)}\n${ctx.ui.theme.fg("accent", command)}\n${ctx.ui.theme.fg("error", `Guard: ${reason}`)}\n${ctx.ui.theme.fg("muted", "We good?")}`,
          ["Yes", "No"],
       );
-
       if (choice === "Yes") return;
+      if (choice === undefined) return { block: true, reason: "Blocked by user" };
 
-      return { block: true, reason: "Blocked by user" };
+      // "No": let the user tell the agent what to do instead; their text is
+      // returned as the block reason, so the agent sees it as the tool result
+      const instead = await ctx.ui.input("Blocked. What should it do instead?");
+      return {
+         block: true,
+         reason: instead ? `Blocked by user. User said: ${instead}` : `Blocked by user (${reason})`,
+      };
    });
 }
